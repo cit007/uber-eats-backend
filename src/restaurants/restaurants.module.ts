@@ -5,9 +5,4 @@ import { RestaurantResolver } from './restaurants.resolver';
 @Module({
   providers: [RestaurantResolver],
 })
-export class RestaurantsModule {
-  @Query((returns) => Boolean)
-  isPizaaGood() {
-    return true;
-  }
-}
+export class RestaurantsModule {}
