@@ -8,7 +8,7 @@ export class CreateRestaurantDto {
   @Length(5, 10)
   name: string;
 
-  @Field((type) => Boolean, { nullable: true })
+  @Field((type) => Boolean)
   @IsBoolean()
   isVegan?: boolean;
 
