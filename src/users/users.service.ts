@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { CreateAccountInput } from './dtos/create-account.dto';
 import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { User } from './entities/user.entity';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    private readonly config: ConfigService,
   ) {}
 
   async createAccount(
@@ -19,6 +22,7 @@ export class UsersService {
     // check new user
     try {
       const isMail = await this.users.findOne({ email });
+      console.log('login', isMail);
       if (isMail) {
         return { ok: false, error: 'user exists already' };
       }
@@ -35,6 +39,7 @@ export class UsersService {
     console.log('login :', email, password);
     try {
       const user = await this.users.findOne({ email });
+      console.log('login', user);
       if (!user) {
         return { ok: false, error: 'user not found' };
       }
@@ -43,7 +48,10 @@ export class UsersService {
       if (!isPwdOk) {
         return { ok: false, error: 'wrong password' };
       }
-      return { ok: true, token: 'dummy test token' };
+
+      // create token without passport package. use jsonwebtoken manually first
+      const token = jwt.sign({ id: user.id }, this.config.get('SECRET_KEY'));
+      return { ok: true, token };
     } catch (error) {
       return { ok: false, error };
     }
