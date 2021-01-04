@@ -3,6 +3,7 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dtos/create-account.dto';
+import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -10,6 +11,7 @@ import { UsersService } from './users.service';
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
+  // dummy Query : GraphQLError [Object]: Query root type must be provided.
   @Query((returns) => Boolean)
   hi() {
     return true;
@@ -20,13 +22,19 @@ export class UsersResolver {
     @Args('input') createAccountInput: CreateAccountInput,
   ): Promise<CreateAccountOutput> {
     try {
-      const { ok, error } = await this.usersService.createAccount(
-        createAccountInput,
-      );
+      return await this.usersService.createAccount(createAccountInput);
+    } catch (error) {
       return {
-        ok,
+        ok: false,
         error,
       };
+    }
+  }
+
+  @Mutation((returns) => LoginOutput)
+  async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
+    try {
+      return await this.usersService.login(loginInput);
     } catch (error) {
       return {
         ok: false,
