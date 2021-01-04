@@ -26,6 +26,6 @@ export class UsersService {
     } catch (e) {
       return { ok: false, error: 'could not create account' };
     }
-    // TODO : hash password
+    // hash password in user.entity.ts using @BeforeInsert
   }
 }
