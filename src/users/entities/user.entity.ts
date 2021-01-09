@@ -40,6 +40,7 @@ export class User extends CoreEntity {
   @BeforeUpdate()
   async hashPassword(): Promise<void> {
     try {
+      console.log('password hash!!!!');
       this.password = await bcrypt.hash(this.password, 10);
     } catch (e) {
       throw new InternalServerErrorException();

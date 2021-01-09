@@ -65,7 +65,14 @@ export class UsersService {
   }
 
   async editProfile(userId: number, editProfileInput: EditProfileInput) {
-    // const { email, password } = editProfileInput; -> @See this is incorrect email or password optional
-    return await this.users.update({ id: userId }, { ...editProfileInput });
+    // @See if email or password is optional, use {...editProfileInput}
+    // @Bug update do not call hashPassword() because update do not concerned about entity. just send query. use save()
+    // return await this.users.update({ id: userId }, { ...editProfileInput });
+
+    const { email, password } = editProfileInput;
+    const user = await this.users.findOne(userId);
+    email ? (user.email = email) : user.email;
+    password ? (user.password = password) : user.password;
+    return await this.users.save(user);
   }
 }
