@@ -65,7 +65,7 @@ export class UsersService {
   }
 
   async editProfile(userId: number, editProfileInput: EditProfileInput) {
-    // @See if email or password is optional, use {...editProfileInput}
+    // @See if email or password is optional, use {...editProfileInput}. update cause error with undefined field.
     // @Bug update do not call hashPassword() because update do not concerned about entity. just send query. use save()
     // return await this.users.update({ id: userId }, { ...editProfileInput });
 
