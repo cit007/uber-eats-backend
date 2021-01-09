@@ -7,12 +7,15 @@ import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from 'src/jwt/jwt.service';
 import { EditProfileInput } from './dtos/edit-profile.dto';
+import { Verfication } from './entities/verification.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    @InjectRepository(Verfication)
+    private readonly verifications: Repository<Verfication>,
     private readonly config: ConfigService,
     private readonly jwtService: JwtService,
   ) {}
@@ -28,7 +31,10 @@ export class UsersService {
       if (isMail) {
         return { ok: false, error: 'user exists already' };
       }
-      await this.users.save(this.users.create({ email, password, role }));
+      const user = await this.users.save(
+        this.users.create({ email, password, role }),
+      );
+      await this.verifications.save(this.verifications.create({ user }));
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'could not create account' };
