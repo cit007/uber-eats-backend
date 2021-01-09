@@ -14,14 +14,19 @@ export class JwtMiddleware implements NestMiddleware {
     if ('x-jwt' in req.headers) {
       //   console.log(req.headers['x-jwt']);
       const token = req.headers['x-jwt'];
-      const decoded = this.jwtService.verify(token.toString());
-      //   console.log(decoded);
-      if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
-        // console.log(decoded['id']);
-        const user = await this.usersService.findOneById(+decoded['id']);
-        req['user'] = user;
-        // console.log('user from token id : ', user);
-      }
+      try {
+        const decoded = this.jwtService.verify(token.toString());
+        //   console.log(decoded);
+        if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
+          // console.log(decoded['id']);
+          const user = await this.usersService.findOneById(+decoded['id']);
+          req['user'] = user;
+          // -------------------------------
+          // @See : this request user data flow : middleware->context of apollo server->authorization guard->resolver
+          //        ->use context info with @decorator or @context in resolver()
+          // -------------------------------
+        }
+      } catch (e) {}
     }
     next();
   }
