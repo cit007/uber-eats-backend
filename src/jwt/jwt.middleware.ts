@@ -19,7 +19,7 @@ export class JwtMiddleware implements NestMiddleware {
         //   console.log(decoded);
         if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
           // console.log(decoded['id']);
-          const user = await this.usersService.findOneById(+decoded['id']);
+          const user = await this.usersService.findOneUserById(+decoded['id']);
           req['user'] = user;
           // -------------------------------
           // @See : this request user data flow : middleware->context of apollo server->authorization guard->resolver

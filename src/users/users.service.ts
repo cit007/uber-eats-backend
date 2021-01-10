@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateAccountInput } from './dtos/create-account.dto';
+import {
+  CreateAccountInput,
+  CreateAccountOutput,
+} from './dtos/create-account.dto';
 import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from 'src/jwt/jwt.service';
-import { EditProfileInput } from './dtos/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verfication } from './entities/verification.entity';
+import { VerifyEmailOutput } from './dtos/verify-email.dto';
+import { UserProfileOutput } from './dtos/user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +27,7 @@ export class UsersService {
 
   async createAccount(
     createAccountInput: CreateAccountInput,
-  ): Promise<{ ok: boolean; error?: string }> {
+  ): Promise<CreateAccountOutput> {
     const { email, password, role } = createAccountInput;
     // check new user
     try {
@@ -65,26 +70,44 @@ export class UsersService {
     }
   }
 
-  async findOneById(id: number): Promise<User> {
-    return await this.users.findOne({ id });
+  async findOneUserById(id: number): Promise<UserProfileOutput> {
+    try {
+      const user = await this.users.findOne({ id });
+      if (user) {
+        return {
+          ok: true,
+          user: user,
+        };
+      }
+    } catch (error) {
+      return { ok: false, error: 'user not Found' };
+    }
   }
 
-  async editProfile(userId: number, editProfileInput: EditProfileInput) {
+  async editProfile(
+    userId: number,
+    editProfileInput: EditProfileInput,
+  ): Promise<EditProfileOutput> {
     // @See if email or password is optional, use {...editProfileInput}. update cause error with undefined field.
     // @Bug update do not call hashPassword() because update do not concerned about entity. just send query. use save()
     // return await this.users.update({ id: userId }, { ...editProfileInput });
-
-    const { email, password } = editProfileInput;
-    const user = await this.users.findOne(userId);
-    email ? (user.email = email) : user.email;
-    if (email) {
-      await this.verifications.save(this.verifications.create({ user }));
+    try {
+      const { email, password } = editProfileInput;
+      const user = await this.users.findOne(userId);
+      if (email) {
+        user.email = email;
+        user.verified = false;
+        await this.verifications.save(this.verifications.create({ user }));
+      }
+      password ? (user.password = password) : user.password;
+      await this.users.save(user);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: 'Could not update profile.' };
     }
-    password ? (user.password = password) : user.password;
-    return await this.users.save(user);
   }
 
-  async verifyEmail(code: string): Promise<boolean> {
+  async verifyEmail(code: string): Promise<VerifyEmailOutput> {
     try {
       const verification = await this.verifications.findOne(
         { code },
@@ -101,11 +124,11 @@ export class UsersService {
           { id: verification.user.id },
           { verified: true },
         );
-        return true;
+        return { ok: true };
       }
-      throw new Error();
+      return { ok: false, error: 'verification not found' };
     } catch (error) {
-      return false;
+      return { ok: false, error };
     }
   }
 }
