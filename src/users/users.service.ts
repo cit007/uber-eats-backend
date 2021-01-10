@@ -47,7 +47,6 @@ export class UsersService {
     console.log('login :', email, password);
     try {
       const user = await this.users.findOne({ email });
-      console.log('login', user);
       if (!user) {
         return { ok: false, error: 'user not found' };
       }
@@ -85,19 +84,28 @@ export class UsersService {
     return await this.users.save(user);
   }
 
-  async verifyEmail(code: string) {
-    const verification = await this.verifications.findOne(
-      { code },
-      { relations: ['user'] },
-    );
-    if (verification) {
-      console.log('verification info:', verification);
-      // const user = await this.users.findOne(verification.user.id);
-      // user.verified = true;
-      // await this.users.save(user);
-      verification.user.verified = true;
-      await this.users.save(verification.user);
+  async verifyEmail(code: string): Promise<boolean> {
+    try {
+      const verification = await this.verifications.findOne(
+        { code },
+        { relations: ['user'] },
+      );
+      if (verification) {
+        // @Bug save(user) have a problem. it hash password again with hashed password.
+        //      -> so, use update function without hashing password again in hook
+        // verification.user.verified = true;
+        // await this.users.save(verification.user);
+
+        console.log('verification info:', verification);
+        await this.users.update(
+          { id: verification.user.id },
+          { verified: true },
+        );
+        return true;
+      }
+      throw new Error();
+    } catch (error) {
+      return false;
     }
-    return true;
   }
 }
