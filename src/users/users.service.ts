@@ -92,9 +92,11 @@ export class UsersService {
     );
     if (verification) {
       console.log('verification info:', verification);
-      const user = await this.users.findOne(verification.user.id);
-      user.verified = true;
-      await this.users.save(user);
+      // const user = await this.users.findOne(verification.user.id);
+      // user.verified = true;
+      // await this.users.save(user);
+      verification.user.verified = true;
+      await this.users.save(verification.user);
     }
     return true;
   }
