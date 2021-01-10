@@ -78,7 +78,24 @@ export class UsersService {
     const { email, password } = editProfileInput;
     const user = await this.users.findOne(userId);
     email ? (user.email = email) : user.email;
+    if (email) {
+      await this.verifications.save(this.verifications.create({ user }));
+    }
     password ? (user.password = password) : user.password;
     return await this.users.save(user);
+  }
+
+  async verifyEmail(code: string) {
+    const verification = await this.verifications.findOne(
+      { code },
+      { relations: ['user'] },
+    );
+    if (verification) {
+      console.log('verification info:', verification);
+      const user = await this.users.findOne(verification.user.id);
+      user.verified = true;
+      await this.users.save(user);
+    }
+    return true;
   }
 }
