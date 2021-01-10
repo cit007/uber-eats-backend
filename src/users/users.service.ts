@@ -97,6 +97,7 @@ export class UsersService {
       if (email) {
         user.email = email;
         user.verified = false;
+        //@TODO if data exist, delete it and insert
         await this.verifications.save(this.verifications.create({ user }));
       }
       password ? (user.password = password) : user.password;
@@ -124,6 +125,7 @@ export class UsersService {
           { id: verification.user.id },
           { verified: true },
         );
+        await this.verifications.delete(verification.id);
         return { ok: true };
       }
       return { ok: false, error: 'verification not found' };
