@@ -11,7 +11,6 @@ export class MailService {
     @Inject(MAIL_OPTIONS) private readonly options: MailModuleOptions,
   ) {
     // console.log('MAIL OPTIONS :', options);
-    // this.sendEmail('testing', 'test');
   }
 
   private async sendEmail(
@@ -24,7 +23,7 @@ export class MailService {
       'from',
       `CIT007 from Uuber Eats <mailgun@${this.options.domain}>`,
     );
-    form.append('to', `cit0077@gmail.com`);
+    form.append('to', `itcho0077@gmail.com`);
     form.append('subject', subject);
     form.append('template', template);
     emailVars.forEach((eVar) => form.append(`v:${eVar.key}`, eVar.value));
@@ -44,6 +43,7 @@ export class MailService {
   }
 
   sendVerificationEmail(email: string, code: string) {
+    console.log('sendVerificationEmail', email, code);
     this.sendEmail('Verify Your Email', 'verify-email', [
       { key: 'code', value: code },
       { key: 'username', value: email },

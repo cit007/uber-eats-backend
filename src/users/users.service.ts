@@ -13,6 +13,7 @@ import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verfication } from './entities/verification.entity';
 import { VerifyEmailOutput } from './dtos/verify-email.dto';
 import { UserProfileOutput } from './dtos/user-profile.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,7 @@ export class UsersService {
     private readonly verifications: Repository<Verfication>,
     private readonly config: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async createAccount(
@@ -39,7 +41,10 @@ export class UsersService {
       const user = await this.users.save(
         this.users.create({ email, password, role }),
       );
-      await this.verifications.save(this.verifications.create({ user }));
+      const verification = await this.verifications.save(
+        this.verifications.create({ user }),
+      );
+      this.mailService.sendVerificationEmail(user.email, verification.code);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: 'could not create account' };
@@ -94,11 +99,21 @@ export class UsersService {
     try {
       const { email, password } = editProfileInput;
       const user = await this.users.findOne(userId);
+      console.log('E---------------------------');
       if (email) {
         user.email = email;
         user.verified = false;
-        //@TODO if data exist, delete it and insert
-        await this.verifications.save(this.verifications.create({ user }));
+        //@TODO if data exist, delete it and insert or do not update verification
+        // await this.verifications.delete({ user });
+        // const verification = await this.verifications.save(
+        //   this.verifications.create({ user }),
+        // );
+        const verification = await this.verifications.findOne(
+          { user },
+          { relations: ['user'] },
+        );
+        console.log('verification', verification);
+        this.mailService.sendVerificationEmail(user.email, verification.code);
       }
       password ? (user.password = password) : user.password;
       await this.users.save(user);
