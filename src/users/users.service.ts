@@ -34,7 +34,7 @@ export class UsersService {
     // check new user
     try {
       const isMail = await this.users.findOne({ email });
-      console.log('login', isMail);
+      console.log('createAccount', isMail);
       if (isMail) {
         return { ok: false, error: 'user exists already' };
       }
