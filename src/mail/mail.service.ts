@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { MailModuleOptions } from './mail.interface';
+import { EmailVar, MailModuleOptions } from './mail.interface';
 import { MAIL_OPTIONS } from './mail.constants';
 import got from 'got';
 import * as FormData from 'form-data';
-import * as mailgun from 'mailgun-js';
+// import * as mailgun from 'mailgun-js';
 
 @Injectable()
 export class MailService {
@@ -11,20 +11,25 @@ export class MailService {
     @Inject(MAIL_OPTIONS) private readonly options: MailModuleOptions,
   ) {
     // console.log('MAIL OPTIONS :', options);
-    this.sendEmail('testing', 'test');
+    // this.sendEmail('testing', 'test');
   }
 
-  private async sendEmail(subject: string, content: string) {
+  private async sendEmail(
+    subject: string,
+    template: string,
+    emailVars: EmailVar[],
+  ) {
     const form = new FormData();
-    form.append('from', `Excited User <mailgun@${this.options.domain}>`);
-    form.append('to', `itcho0077@gmail.com`);
+    form.append(
+      'from',
+      `CIT007 from Uuber Eats <mailgun@${this.options.domain}>`,
+    );
+    form.append('to', `cit0077@gmail.com`);
     form.append('subject', subject);
-    form.append('template', 'verify-email');
-    form.append('v:code', 'asasas');
-    form.append('v:username', 'itcho!!!');
-    const response = await got(
-      `https://api.mailgun.net/v3/${this.options.domain}/messages`,
-      {
+    form.append('template', template);
+    emailVars.forEach((eVar) => form.append(`v:${eVar.key}`, eVar.value));
+    try {
+      await got(`https://api.mailgun.net/v3/${this.options.domain}/messages`, {
         method: 'POST',
         headers: {
           Authorization: `Basic ${Buffer.from(
@@ -32,8 +37,16 @@ export class MailService {
           ).toString('base64')}`,
         },
         body: form,
-      },
-    );
-    console.log(response.body);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  sendVerificationEmail(email: string, code: string) {
+    this.sendEmail('Verify Your Email', 'verify-email', [
+      { key: 'code', value: code },
+      { key: 'username', value: email },
+    ]);
   }
 }
