@@ -9,11 +9,11 @@ import { User } from './entities/user.entity';
 import { Verfication } from './entities/verification.entity';
 import { UsersService } from './users.service';
 
-const mockRepository = {
+const mockRepository = () => ({
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
-};
+});
 
 const mockJwtService = {
   sign: jest.fn(),
@@ -29,6 +29,7 @@ type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 describe('UserService', () => {
   let service: UsersService;
   let usersRepository: MockRepository<User>;
+  let verificationsRepository: MockRepository<Verfication>;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -38,11 +39,11 @@ describe('UserService', () => {
         CommonModule,
         {
           provide: getRepositoryToken(User),
-          useValue: mockRepository,
+          useValue: mockRepository(),
         },
         {
           provide: getRepositoryToken(Verfication),
-          useValue: mockRepository,
+          useValue: mockRepository(),
         },
         {
           provide: JwtService,
@@ -56,6 +57,7 @@ describe('UserService', () => {
     }).compile();
     service = module.get<UsersService>(UsersService);
     usersRepository = module.get(getRepositoryToken(User));
+    verificationsRepository = module.get(getRepositoryToken(Verfication));
   });
 
   it('should be defined', () => {
@@ -63,17 +65,43 @@ describe('UserService', () => {
   });
 
   describe('createAccount', () => {
+    const createAccountArgs = {
+      email: 'test@gmail.com',
+      password: '1234',
+      role: 0,
+    };
+
     it('should fail if user exists', async () => {
       usersRepository.findOne.mockResolvedValue({
         id: 1,
         email: 'test@gmail.com',
       });
-      const result = await service.createAccount({
-        email: '',
-        password: '',
-        role: 0,
-      });
+      const result = await service.createAccount(createAccountArgs);
       expect(result).toMatchObject({ ok: false, error: 'user exists already' });
+    });
+
+    it('should create a new user', async () => {
+      usersRepository.findOne.mockResolvedValue(undefined);
+      usersRepository.create.mockReturnValue(createAccountArgs);
+      usersRepository.save.mockResolvedValue(createAccountArgs);
+      verificationsRepository.create.mockReturnValue({
+        user: createAccountArgs,
+      });
+      verificationsRepository.save.mockResolvedValue({ code: 'code' });
+      await service.createAccount(createAccountArgs);
+      expect(usersRepository.create).toHaveBeenCalledTimes(1);
+      expect(usersRepository.create).toHaveBeenCalledWith(createAccountArgs);
+      expect(usersRepository.save).toHaveBeenCalledTimes(1);
+      expect(usersRepository.save).toHaveBeenCalledWith(createAccountArgs);
+
+      expect(verificationsRepository.create).toHaveBeenCalledTimes(1);
+      expect(verificationsRepository.create).toHaveBeenCalledWith({
+        user: createAccountArgs,
+      });
+      expect(verificationsRepository.save).toHaveBeenCalledTimes(1);
+      expect(verificationsRepository.save).toHaveBeenCalledWith({
+        user: createAccountArgs,
+      });
     });
   });
   it.todo('login');
