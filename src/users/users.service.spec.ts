@@ -133,6 +133,15 @@ describe('UserService', () => {
       expect(usersRepository.findOne).toHaveBeenCalledWith(expect.any(Object));
       expect(result).toEqual({ ok: false, error: 'user not found' });
     });
+
+    it('should fail if the password is wrong', async () => {
+      const mockedUser = {
+        checkPassword: jest.fn(() => Promise.resolve(false)),
+      };
+      usersRepository.findOne.mockResolvedValue(mockedUser);
+      const result = await service.login(loginArgs);
+      expect(result).toEqual({ ok: false, error: 'wrong password' });
+    });
   });
 
   it.todo('findOneUserById');
