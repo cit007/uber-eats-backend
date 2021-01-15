@@ -16,7 +16,7 @@ const mockRepository = () => ({
 });
 
 const mockJwtService = {
-  sign: jest.fn(),
+  sign: jest.fn(() => 'signed-token-baby'),
   verify: jest.fn(),
 };
 
@@ -31,6 +31,7 @@ describe('UserService', () => {
   let usersRepository: MockRepository<User>;
   let verificationsRepository: MockRepository<Verfication>;
   let mailService: MailService;
+  let jwtService: JwtService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -60,6 +61,7 @@ describe('UserService', () => {
     usersRepository = module.get(getRepositoryToken(User));
     verificationsRepository = module.get(getRepositoryToken(Verfication));
     mailService = module.get<MailService>(MailService);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {
@@ -141,6 +143,19 @@ describe('UserService', () => {
       usersRepository.findOne.mockResolvedValue(mockedUser);
       const result = await service.login(loginArgs);
       expect(result).toEqual({ ok: false, error: 'wrong password' });
+    });
+
+    it('should return token if password correct', async () => {
+      const mockedUser = {
+        id: 1,
+        checkPassword: jest.fn(() => Promise.resolve(true)),
+      };
+      usersRepository.findOne.mockResolvedValue(mockedUser);
+      const result = await service.login(loginArgs);
+      console.log(result);
+      expect(jwtService.sign).toHaveBeenCalledTimes(1);
+      expect(jwtService.sign).toHaveBeenCalledWith(expect.any(Number));
+      expect(result).toEqual({ ok: true, token: 'signed-token-baby' });
     });
   });
 
