@@ -101,7 +101,7 @@ export class UsersService {
       if (email) {
         user.email = email;
         user.verified = false;
-        //@TODO if data exist, delete it and insert or do not update verification
+        //@TODO if data exist, delete it and insert or do not insert verification
         // await this.verifications.delete({ user });
         // const verification = await this.verifications.save(
         //   this.verifications.create({ user }),
