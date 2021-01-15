@@ -97,7 +97,6 @@ export class UsersService {
     try {
       const { email, password } = editProfileInput;
       const user = await this.users.findOne(userId);
-      console.log('E---------------------------');
       if (email) {
         user.email = email;
         user.verified = false;
