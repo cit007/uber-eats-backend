@@ -18,6 +18,7 @@ import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
 import { Verfication } from './users/entities/verification.entity';
 import { MailModule } from './mail/mail.module';
+import { Category } from './restaurants/entities/category.entity';
 
 @Module({
   imports: [
@@ -47,7 +48,7 @@ import { MailModule } from './mail/mail.module';
       database: process.env.DB_NAME,
       logging: process.env.NODE_ENV !== 'prod',
       synchronize: process.env.NODE_ENV !== 'prod',
-      entities: [User, Verfication],
+      entities: [User, Verfication, Restaurant, Category],
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
@@ -64,6 +65,7 @@ import { MailModule } from './mail/mail.module';
     UsersModule,
     CommonModule,
     AuthModule,
+    RestaurantsModule,
   ],
   controllers: [],
   providers: [],
