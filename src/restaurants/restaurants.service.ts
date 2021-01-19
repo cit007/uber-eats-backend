@@ -12,6 +12,7 @@ import {
 } from './dtos/edit-restaurant.dto';
 import { Category } from './entities/category.entity';
 import { Restaurant } from './entities/restaurants.entity';
+import { CategoryRepository } from './repositories/category.repository';
 
 @Injectable()
 export class RestaurantService {
@@ -19,7 +20,7 @@ export class RestaurantService {
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
     @InjectRepository(Category)
-    private readonly categories: Repository<Category>,
+    private readonly categories: CategoryRepository,
   ) {}
 
   async createRestaurant(
@@ -29,16 +30,11 @@ export class RestaurantService {
     try {
       const newRestaurant = this.restaurants.create(createRestaurantInput);
       newRestaurant.owner = owner;
-      const categoryName = createRestaurantInput.categoryName
-        .trim()
-        .toLowerCase();
-      const categorySlug = categoryName.replace(/ /g, '-');
-      let category = await this.categories.findOne({ slug: categorySlug });
-      if (!category) {
-        category = await this.categories.save(
-          this.categories.create({ slug: categorySlug, name: categoryName }),
-        );
-      }
+
+      const category = await this.categories.getOrCreate(
+        createRestaurantInput.categoryName,
+      );
+
       newRestaurant.category = category;
       await this.restaurants.save(newRestaurant);
       return { ok: true };
@@ -67,6 +63,20 @@ export class RestaurantService {
           error: 'you can not edit restaurant that you do not own',
         };
       }
+
+      let category: Category = null;
+      if (editRestaurantInput.categoryName) {
+        category = await this.categories.getOrCreate(
+          editRestaurantInput.categoryName,
+        );
+      }
+      await this.restaurants.save([
+        {
+          id: editRestaurantInput.restaurantId,
+          ...editRestaurantInput,
+          ...(category && { category }),
+        },
+      ]);
 
       return { ok: true };
     } catch (error) {
