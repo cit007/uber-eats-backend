@@ -54,11 +54,18 @@ export class RestaurantService {
     try {
       const restaurant = await this.restaurants.findOne(
         editRestaurantInput.restaurantId,
-        { loadRelationIds: true },
+        // { loadRelationIds: true },
       );
       console.log('edit restaurant target:', restaurant);
       if (!restaurant) {
         return { ok: false, error: 'not found restaurant' };
+      }
+
+      if (owner.id !== restaurant.ownerId) {
+        return {
+          ok: false,
+          error: 'you can not edit restaurant that you do not own',
+        };
       }
 
       return { ok: true };
