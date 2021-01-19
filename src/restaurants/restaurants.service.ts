@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
+import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
@@ -105,10 +106,23 @@ export class RestaurantService {
           error: 'you can not delete restaurant that you do not own',
         };
       }
-      this.restaurants.delete({ id: deleteRestaurantInput.restaurantId });
+      await this.restaurants.delete({ id: deleteRestaurantInput.restaurantId });
       return { ok: true };
     } catch (error) {
       return { ok: false, error: 'can not delete restaurnat' };
+    }
+  }
+
+  async allCategories(): Promise<AllCategoriesOutput> {
+    try {
+      const categories = await this.categories.find();
+      console.log('all categories:', categories);
+      return {
+        ok: true,
+        categories,
+      };
+    } catch (error) {
+      return { ok: false, error: 'can not find all categories' };
     }
   }
 }
