@@ -135,15 +135,24 @@ export class RestaurantService {
     categoryInput: CategoryInput,
   ): Promise<CategoryOutput> {
     try {
-      const { slug } = categoryInput;
+      const { slug, page } = categoryInput;
       const category = await this.categories.findOne(
         { slug },
-        { relations: ['restaurants'] },
+        // { relations: ['restaurants'] },
       );
       if (!category) {
         return { ok: false, error: 'can not find category' };
       }
-      return { ok: true, category };
+
+      const restaurants = await this.restaurants.find({
+        where: { category },
+        take: 25,
+        skip: (page - 1) * 25,
+      });
+      category.restaurants = restaurants;
+      const totalResults = await this.countRestaurants(category);
+
+      return { ok: true, category, totalPages: Math.ceil(totalResults / 25) };
     } catch (error) {
       return { ok: false, error: 'can not load category' };
     }
