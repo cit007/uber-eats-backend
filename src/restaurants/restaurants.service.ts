@@ -125,4 +125,8 @@ export class RestaurantService {
       return { ok: false, error: 'can not find all categories' };
     }
   }
+
+  countRestaurants(category: Category) {
+    return this.restaurants.count({ category });
+  }
 }
