@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
+import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
@@ -128,5 +129,23 @@ export class RestaurantService {
 
   countRestaurants(category: Category) {
     return this.restaurants.count({ category });
+  }
+
+  async findCategoryBySlug(
+    categoryInput: CategoryInput,
+  ): Promise<CategoryOutput> {
+    try {
+      const { slug } = categoryInput;
+      const category = await this.categories.findOne(
+        { slug },
+        { relations: ['restaurants'] },
+      );
+      if (!category) {
+        return { ok: false, error: 'can not find category' };
+      }
+      return { ok: true, category };
+    } catch (error) {
+      return { ok: false, error: 'can not load category' };
+    }
   }
 }
