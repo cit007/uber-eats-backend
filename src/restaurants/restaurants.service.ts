@@ -281,7 +281,10 @@ export class RestaurantService {
     editDishInput: EditDishInput,
   ): Promise<EditDishOutput> {
     try {
-      const dish = await this.dishes.findOne(editDishInput.dishId);
+      const dish = await this.dishes.findOne(
+        { id: editDishInput.dishId },
+        { relations: ['restaurant'] },
+      );
       if (!dish) {
         return {
           ok: false,
@@ -294,6 +297,15 @@ export class RestaurantService {
           error: 'You can not do that because owner id is not matched',
         };
       }
+
+      await this.dishes.save({
+        id: editDishInput.dishId,
+        ...editDishInput,
+      });
+
+      return {
+        ok: true,
+      };
     } catch (error) {
       return {
         ok: false,
@@ -326,6 +338,9 @@ export class RestaurantService {
         };
       }
       await this.dishes.delete(deleteDishInput.dishId);
+      return {
+        ok: true,
+      };
     } catch (error) {
       return {
         ok: false,
